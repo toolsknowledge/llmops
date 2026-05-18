@@ -148,4 +148,46 @@ Step 22.
     create pipeline
 
 
+Step 23.
+    download and install NodeJS
+        frontend frameworks / libraries depending on NodeJS
+    > https://nodejs.org/en/download
+    > node --version
+
+Step 24.
+        create react application
+        > npm create vite@latest
+
+        > cd llm-rag-project
+        > npm create vite@latest
+            Q1: do you want to proced (y)
+            Q2 : enter project name
+                    frontend
+            Q3: choose framework
+                    react
+            Q4: choose variant
+                    javascript
+            Q5: install libraries and run project ?
+                    yes
+
+Step 25.
+        frontend
+              src
+                api.js
+                App.jsx
+
+        package.json
+        Dockerfile
+        Jenkinsfile
+        nginx.conf
+
+        it will integrated API Calls from backend to frontend
+        App.jsx file is the main react component
+        (it includes upload pdf files and we can query)
+        (App.jsx implemented by using RWD)
+
+        package.json file contains libraries information
+    
+
+
         
