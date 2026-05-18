@@ -136,7 +136,7 @@ Step 20.
 Step 21.
         add Credentials in Jenkins
         1) OPENAI_API_KEY
-        2) EC2_HOST ubuntu@51.21.24.145
+        2) EC2_HOST ubuntu@51.20.189.249
         3) ec2-ssh-key (SSH Username w/ key)
         4) dockerhub-creds (Username with password)
 
