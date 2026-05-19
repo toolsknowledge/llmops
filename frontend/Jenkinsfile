@@ -1,6 +1,9 @@
 // ────────────────────────────────────────────────────────────────
-// Jenkinsfile — CI/CD for full-stack LLM RAG Project (FIXED)
-// Key Fix: Proper quoting for SSH remote commands
+// Jenkinsfile — CI/CD for full-stack LLM RAG Project
+// Trigger:  GitHub webhook on push to master
+// Flow:     Checkout → Build backend + frontend images
+//           → Push both to Docker Hub
+//           → SSH to EC2 → install compose if missing → docker compose up
 // ────────────────────────────────────────────────────────────────
 pipeline {
     agent any
@@ -53,10 +56,13 @@ pipeline {
                 )]) {
                     sh '''
                         echo "$DH_PASS" | docker login -u "$DH_USER" --password-stdin
+
                         docker tag ${BACKEND_IMAGE}:latest  $DH_USER/${BACKEND_IMAGE}:latest
                         docker tag ${FRONTEND_IMAGE}:latest $DH_USER/${FRONTEND_IMAGE}:latest
+
                         docker push $DH_USER/${BACKEND_IMAGE}:latest
                         docker push $DH_USER/${FRONTEND_IMAGE}:latest
+
                         docker logout
                     '''
                 }
@@ -68,18 +74,27 @@ pipeline {
             steps {
                 sshagent(credentials: ['ec2-ssh-key']) {
                     sh '''
-                        # Copy docker-compose.yml to EC2
                         scp -o StrictHostKeyChecking=no docker-compose.yml $EC2_HOST:/home/ubuntu/docker-compose.yml
 
-                        # Deploy: All commands in SINGLE QUOTED STRING
-                        ssh -o StrictHostKeyChecking=no $EC2_HOST 'bash -s' <<'DEPLOY_SCRIPT'
-mkdir -p /home/ubuntu/chroma_data /home/ubuntu/uploads
-export OPENAI_API_KEY=${OPENAI_API_KEY}
-cd /home/ubuntu
-sudo docker compose pull
-sudo docker compose up -d --remove-orphans
-sudo docker image prune -f
-DEPLOY_SCRIPT
+                        ssh -o StrictHostKeyChecking=no $EC2_HOST "
+                            set -e &&
+
+                            # Install docker compose plugin if missing (idempotent)
+                            if ! docker compose version >/dev/null 2>&1; then
+                                echo '>>> Installing docker compose plugin...' &&
+                                sudo mkdir -p /usr/local/lib/docker/cli-plugins &&
+                                sudo curl -fsSL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose &&
+                                sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose &&
+                                docker compose version
+                            fi &&
+
+                            mkdir -p /home/ubuntu/chroma_data /home/ubuntu/uploads &&
+                            export OPENAI_API_KEY='${OPENAI_API_KEY}' &&
+                            cd /home/ubuntu &&
+                            docker compose pull &&
+                            docker compose up -d --remove-orphans &&
+                            docker image prune -f
+                        "
                     '''
                 }
             }
@@ -87,7 +102,7 @@ DEPLOY_SCRIPT
     }
 
     post {
-        success { echo "✅ Build #${env.BUILD_NUMBER} deployed successfully!" }
+        success { echo "✅ Build #${env.BUILD_NUMBER} deployed — visit http://<EC2-IP>/" }
         failure { echo "❌ Build #${env.BUILD_NUMBER} failed — check logs" }
         always  { sh 'docker image prune -f || true' }
     }
