@@ -3,7 +3,7 @@
 // Trigger:  GitHub webhook on push to master
 // Flow:     Checkout → Build backend + frontend images
 //           → Push both to Docker Hub
-//           → SSH to EC2 → install compose if missing → docker compose up
+//           → SSH to EC2 → docker-compose pull + up
 // ────────────────────────────────────────────────────────────────
 pipeline {
     agent any
@@ -12,7 +12,7 @@ pipeline {
         BACKEND_IMAGE  = "llm-rag-app"
         FRONTEND_IMAGE = "llm-rag-frontend"
         IMAGE_TAG      = "${env.BUILD_NUMBER}"
-        EC2_HOST       = credentials('EC2_HOST')
+        EC2_HOST       = credentials('EC2_HOST')          // ubuntu@<IP>
         OPENAI_API_KEY = credentials('OPENAI_API_KEY')
         DOCKERHUB_USER = "excelr"
     }
