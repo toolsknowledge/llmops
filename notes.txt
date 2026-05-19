@@ -187,6 +187,20 @@ Step 25.
         (App.jsx implemented by using RWD)
 
         package.json file contains libraries information
+
+Docker Compose Installation
+
+sudo mkdir -p /usr/local/lib/docker/cli-plugins
+
+sudo curl -SL \
+  https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 \
+  -o /usr/local/lib/docker/cli-plugins/docker-compose
+
+sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+
+# Verify
+docker compose version
+# Must print: Docker Compose version v2.x.x
     
 
 
